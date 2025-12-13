@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="EventFinderClient.Views.ProfilePage"
+             Title="Профиль">
+
+    <ScrollView>
+        <VerticalStackLayout>
+
+            <Label Text="Профиль" 
+                   Style="{StaticResource Title}"
+                   HorizontalOptions="Center"
+                   Margin="0,40,0,20" />
+
+            <Frame Style="{StaticResource Card}">
+                <VerticalStackLayout>
+
+                    <Label Text="Имя пользователя" 
+                           Style="{StaticResource Caption}" />
+                    <Label Text="Иванов Иван"
+                           Style="{StaticResource Body}"
+                           Margin="0,5,0,15" />
+
+                    <Label Text="Email" 
+                           Style="{StaticResource Caption}" />
+                    <Label Text="ivanov@mail.ru"
+                           Style="{StaticResource Body}"
+                           Margin="0,5,0,15" />
+
+                    <Label Text="Роль" 
+                           Style="{StaticResource Caption}" />
+                    <Label Text="Пользователь"
+                           Style="{StaticResource Body}"
+                           Margin="0,5,0,20" />
+
+                    <Button Text="Выйти"
+                            Command="{Binding LogoutCommand}"
+                            Style="{StaticResource ErrorButton}" />
+
+                </VerticalStackLayout>
+            </Frame>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

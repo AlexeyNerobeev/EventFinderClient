@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="EventFinderClient.Views.EventDetailsPage"
+             Title="Детали">
+
+    <ScrollView>
+        <VerticalStackLayout>
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}"
+                               IsVisible="{Binding IsBusy}"
+                               HorizontalOptions="Center"
+                               Margin="0,20" />
+
+            <StackLayout>
+
+                <Frame Style="{StaticResource Card}">
+                    <VerticalStackLayout>
+                        <Label Text="Новогодняя ярмарка"
+                               Style="{StaticResource Subtitle}" />
+
+                        <HorizontalStackLayout Margin="0,10,0,0">
+                            <Label Text="{Binding Event.DateTime, StringFormat='{0:dd.MM.yyyy HH:mm}'}"
+                                   Style="{StaticResource Body}" />
+                            <Label Text=" • "
+                                   Style="{StaticResource Body}" />
+                            <Label Text="Ярмарка"
+                                   TextColor="{StaticResource Primary}"
+                                   Style="{StaticResource Body}" />
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+                </Frame>
+
+                <Frame Style="{StaticResource Card}">
+                    <VerticalStackLayout>
+                        <Label Text="Описание"
+                               Style="{StaticResource Subtitle}"
+                               Margin="0,0,0,10" />
+                        <Label Text="Новогодняя ярмарка в ОКЭИ"
+                               Style="{StaticResource Body}" />
+                    </VerticalStackLayout>
+                </Frame>
+
+                <Frame Style="{StaticResource Card}">
+                    <VerticalStackLayout>
+                        <Label Text="Место проведения"
+                               Style="{StaticResource Subtitle}"
+                               Margin="0,0,0,10" />
+                        <Label Text="ОКЭИ"
+                               Style="{StaticResource Body}" />
+                        <Label Text="г. Оренбург, ул. Чкалова, д. 11"
+                               Style="{StaticResource Caption}" />
+                    </VerticalStackLayout>
+                </Frame>
+
+                <Frame Style="{StaticResource Card}">
+                    <VerticalStackLayout>
+                        <Label Text="Участники"
+                               Style="{StaticResource Subtitle}"
+                               Margin="0,0,0,10" />
+                        <Label Text="{Binding Event.CurrentAttendees, StringFormat='{0}/{1} мест занято'}"
+                               Style="{StaticResource Body}" />
+
+                        <Label>
+                            <Label.Triggers>
+                                <DataTrigger TargetType="Label" 
+                                             Binding="{Binding Event.HasAvailableSpots}" 
+                                             Value="True">
+                                    <Setter Property="Text" Value="Есть свободные места" />
+                                    <Setter Property="TextColor" Value="{StaticResource Success}" />
+                                </DataTrigger>
+                                <DataTrigger TargetType="Label" 
+                                             Binding="{Binding Event.HasAvailableSpots}" 
+                                             Value="False">
+                                    <Setter Property="Text" Value="Мест нет" />
+                                    <Setter Property="TextColor" Value="{StaticResource Error}" />
+                                </DataTrigger>
+                            </Label.Triggers>
+                        </Label>
+                    </VerticalStackLayout>
+                </Frame>
+
+                <Frame Style="{StaticResource Card}">
+                    <VerticalStackLayout>
+
+                        <Button Text="Зарегистрироваться"
+                                Command="{Binding RegisterCommand}"
+                                Style="{StaticResource SuccessButton}">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button" 
+                                             Binding="{Binding IsRegistered}" 
+                                             Value="True">
+                                    <Setter Property="IsVisible" Value="False" />
+                                </DataTrigger>
+                                <DataTrigger TargetType="Button" 
+                                             Binding="{Binding Event.HasAvailableSpots}" 
+                                             Value="False">
+                                    <Setter Property="IsVisible" Value="False" />
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+
+                        <Button Text="Отменить регистрацию"
+                                Command="{Binding CancelRegistrationCommand}"
+                                Style="{StaticResource ErrorButton}">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button" 
+                                             Binding="{Binding IsRegistered}" 
+                                             Value="False">
+                                    <Setter Property="IsVisible" Value="False" />
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+
+                    </VerticalStackLayout>
+                </Frame>
+
+            </StackLayout>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

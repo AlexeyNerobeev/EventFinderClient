@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="EventFinderClient.Views.EventsPage"
+             Title="Мероприятия">
+
+    <RefreshView IsRefreshing="{Binding IsRefreshing}"
+                 Command="{Binding RefreshEventsCommand}">
+
+        <CollectionView ItemsSource="{Binding Events}"
+                        SelectionMode="Single"
+                        SelectedItem="{Binding SelectedEvent}">
+
+            <CollectionView.EmptyView>
+                <VerticalStackLayout Padding="40">
+                    <Label Text="Нет мероприятий"
+                           Style="{StaticResource Subtitle}"
+                           HorizontalOptions="Center" />
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
+
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Frame Style="{StaticResource Card}" Margin="0,0,0,10">
+                        <VerticalStackLayout>
+
+                            <Label Text="{Binding Title}"
+                                   Style="{StaticResource Subtitle}" />
+
+                            <HorizontalStackLayout>
+                                <Label Text="{Binding DateTime, StringFormat='{0:dd.MM.yyyy HH:mm}'}"
+                                       Style="{StaticResource Caption}" />
+                                <Label Text=" • "
+                                       Style="{StaticResource Caption}" />
+                                <Label Text="{Binding Category}"
+                                       TextColor="{StaticResource Primary}"
+                                       Style="{StaticResource Caption}" />
+                            </HorizontalStackLayout>
+
+                            <Label Text="{Binding Description}"
+                                   Style="{StaticResource Body}"
+                                   LineBreakMode="TailTruncation"
+                                   MaxLines="2"
+                                   Margin="0,10" />
+
+                            <HorizontalStackLayout>
+                                <Label Text="{Binding Price, StringFormat='{0:C}'}"
+                                       Style="{StaticResource Body}"
+                                       FontAttributes="Bold" />
+
+                                <Label Text=" • "
+                                       Style="{StaticResource Body}" />
+
+                                <Label Text="{Binding CurrentAttendees, StringFormat='{0}/{1} участников'}">
+                                    <Label.Triggers>
+                                        <DataTrigger TargetType="Label" 
+                                                     Binding="{Binding HasAvailableSpots}" 
+                                                     Value="True">
+                                            <Setter Property="TextColor" Value="{StaticResource Success}" />
+                                        </DataTrigger>
+                                        <DataTrigger TargetType="Label" 
+                                                     Binding="{Binding HasAvailableSpots}" 
+                                                     Value="False">
+                                            <Setter Property="TextColor" Value="{StaticResource Error}" />
+                                        </DataTrigger>
+                                    </Label.Triggers>
+                                </Label>
+                            </HorizontalStackLayout>
+
+                            <Button Text="Зарегистрироваться"
+                                    Style="{StaticResource SuccessButton}"
+                                    Margin="0,10,0,0">
+                                <Button.Triggers>
+                                    <DataTrigger TargetType="Button" 
+                                                 Binding="{Binding HasAvailableSpots}" 
+                                                 Value="False">
+                                        <Setter Property="IsVisible" Value="False" />
+                                    </DataTrigger>
+                                </Button.Triggers>
+                            </Button>
+
+                        </VerticalStackLayout>
+                    </Frame>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+
+        </CollectionView>
+    </RefreshView>
+
+</ContentPage>

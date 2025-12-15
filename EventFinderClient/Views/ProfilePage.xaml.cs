@@ -1,9 +1,12 @@
+using EventFinderClient.ViewModels;
+
 namespace EventFinderClient.Views;
 
 public partial class ProfilePage : ContentPage
 {
-	public ProfilePage()
-	{
-		InitializeComponent();
-	}
+    public ProfilePage(ProfileViewModel viewModel)
+    {
+        InitializeComponent();
+        BindingContext = viewModel;
+    }
 }

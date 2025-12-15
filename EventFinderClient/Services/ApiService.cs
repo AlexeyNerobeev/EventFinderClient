@@ -11,7 +11,7 @@ namespace EventFinderClient.Services
     {
         private readonly HttpClient _httpClient;
         private readonly JsonSerializerOptions _jsonOptions;
-        private readonly string _baseUrl = "https://localhost:5432/LocalEventFinderAPI/api";
+        private readonly string _baseUrl = "https://localhost:7117/LocalEventFinderAPI/api";
 
         public ApiService()
         {

@@ -122,7 +122,7 @@ namespace EventFinderClient.ViewModels
 
         private async Task LoginAsync()
         {
-            await Shell.Current.GoToAsync("LoginPage");
+            await Shell.Current.GoToAsync("//LoginPage");
         }
     }
 }

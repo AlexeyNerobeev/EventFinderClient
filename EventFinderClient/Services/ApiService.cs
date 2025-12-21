@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EventFinderClient.Models.DTO;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,7 +12,7 @@ namespace EventFinderClient.Services
     {
         private readonly HttpClient _httpClient;
         private readonly JsonSerializerOptions _jsonOptions;
-        private readonly string _baseUrl = "https://localhost:7117/LocalEventFinderAPI/api";
+        private readonly string _baseUrl = "https://localhost:7117/api";
 
         public ApiService()
         {
@@ -163,6 +164,18 @@ namespace EventFinderClient.Services
         public void ClearAuthorizationHeader()
         {
             _httpClient.DefaultRequestHeaders.Remove("Authorization");
+        }
+
+        public async Task<AuthResponseDto> GetProfileAsync()
+        {
+            try
+            {
+                return await GetAsync<AuthResponseDto>("users/profile");
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Ошибка получения профиля: {ex.Message}");
+            }
         }
     }
 

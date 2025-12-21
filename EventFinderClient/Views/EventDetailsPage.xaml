@@ -2,122 +2,170 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="EventFinderClient.Views.EventDetailsPage"
+             xmlns:converters="clr-namespace:EventFinderClient.Converters"
              Title="Детали">
 
     <ScrollView>
-        <VerticalStackLayout>
+        <StackLayout Padding="20" Spacing="15">
 
             <ActivityIndicator IsRunning="{Binding IsBusy}"
                                IsVisible="{Binding IsBusy}"
                                HorizontalOptions="Center"
-                               Margin="0,20" />
+                               VerticalOptions="Center" />
 
-            <StackLayout>
+            <StackLayout IsVisible="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}">
 
-                <Frame Style="{StaticResource Card}">
+                <Frame CornerRadius="10" Padding="15" HasShadow="True">
                     <VerticalStackLayout>
-                        <Label Text="Новогодняя ярмарка"
-                               Style="{StaticResource Subtitle}" />
+                        <Label Text="{Binding Event.Title}"
+                               FontSize="22"
+                               FontAttributes="Bold"
+                               TextColor="{StaticResource Primary}" />
 
-                        <HorizontalStackLayout Margin="0,10,0,0">
-                            <Label Text="{Binding Event.DateTime, StringFormat='{0:dd.MM.yyyy HH:mm}'}"
-                                   Style="{StaticResource Body}" />
-                            <Label Text=" • "
-                                   Style="{StaticResource Body}" />
-                            <Label Text="Ярмарка"
-                                   TextColor="{StaticResource Primary}"
-                                   Style="{StaticResource Body}" />
+                        <HorizontalStackLayout Margin="0,10,0,0" Spacing="5">
+                            <Label Text="{Binding Event.DateTime, StringFormat='{0:dd.MM.yyyy}'}"
+                                   FontSize="16"
+                                   TextColor="{StaticResource GrayDark}" />
+                            <Label Text="•"
+                                   FontSize="16"
+                                   TextColor="{StaticResource GrayDark}" />
+                            <Label Text="{Binding Event.DateTime, StringFormat='{0:HH:mm}'}"
+                                   FontSize="16"
+                                   TextColor="{StaticResource GrayDark}" />
+                            <Label Text="•"
+                                   FontSize="16"
+                                   TextColor="{StaticResource GrayDark}" />
+                            <Label Text="{Binding Event.Category}"
+                                   FontSize="16"
+                                   TextColor="{StaticResource Primary}" />
                         </HorizontalStackLayout>
                     </VerticalStackLayout>
                 </Frame>
 
-                <Frame Style="{StaticResource Card}">
+                <Frame CornerRadius="10" Padding="15" HasShadow="True">
                     <VerticalStackLayout>
                         <Label Text="Описание"
-                               Style="{StaticResource Subtitle}"
-                               Margin="0,0,0,10" />
-                        <Label Text="Новогодняя ярмарка в ОКЭИ"
-                               Style="{StaticResource Body}" />
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               TextColor="{StaticResource GrayDark}" />
+                        <Label Text="{Binding Event.Description}"
+                               Margin="0,10,0,0"
+                               FontSize="16"
+                               TextColor="{StaticResource GrayDark}" />
                     </VerticalStackLayout>
                 </Frame>
 
-                <Frame Style="{StaticResource Card}">
+                <Frame CornerRadius="10" Padding="15" HasShadow="True"
+                       IsVisible="{Binding Venue, Converter={StaticResource NotNullConverter}}">
                     <VerticalStackLayout>
                         <Label Text="Место проведения"
-                               Style="{StaticResource Subtitle}"
-                               Margin="0,0,0,10" />
-                        <Label Text="ОКЭИ"
-                               Style="{StaticResource Body}" />
-                        <Label Text="г. Оренбург, ул. Чкалова, д. 11"
-                               Style="{StaticResource Caption}" />
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               TextColor="{StaticResource GrayDark}" />
+
+                        <Label Text="{Binding Venue.Name}"
+                               Margin="0,10,0,0"
+                               FontSize="16"
+                               FontAttributes="Bold"
+                               TextColor="{StaticResource Primary}" />
+
+                        <Label Text="{Binding Venue.Address}"
+                               Margin="0,5,0,0"
+                               FontSize="14"
+                               TextColor="{StaticResource GrayDark}" />
+
+                        <HorizontalStackLayout Margin="0,5,0,0" Spacing="10">
+                            <Label Text="{Binding Venue.Capacity, StringFormat='Вместимость: {0}'}"
+                                   FontSize="14"
+                                   TextColor="{StaticResource Gray}" />
+                        </HorizontalStackLayout>
                     </VerticalStackLayout>
                 </Frame>
 
-                <Frame Style="{StaticResource Card}">
+                <Frame CornerRadius="10" Padding="15" HasShadow="True"
+                       IsVisible="{Binding Organizer, Converter={StaticResource NotNullConverter}}">
                     <VerticalStackLayout>
-                        <Label Text="Участники"
-                               Style="{StaticResource Subtitle}"
-                               Margin="0,0,0,10" />
-                        <Label Text="{Binding Event.CurrentAttendees, StringFormat='{0}/{1} мест занято'}"
-                               Style="{StaticResource Body}" />
+                        <Label Text="Организатор"
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               TextColor="{StaticResource GrayDark}" />
 
-                        <Label>
-                            <Label.Triggers>
-                                <DataTrigger TargetType="Label" 
-                                             Binding="{Binding Event.HasAvailableSpots}" 
-                                             Value="True">
-                                    <Setter Property="Text" Value="Есть свободные места" />
-                                    <Setter Property="TextColor" Value="{StaticResource Success}" />
-                                </DataTrigger>
-                                <DataTrigger TargetType="Label" 
-                                             Binding="{Binding Event.HasAvailableSpots}" 
-                                             Value="False">
-                                    <Setter Property="Text" Value="Мест нет" />
-                                    <Setter Property="TextColor" Value="{StaticResource Error}" />
-                                </DataTrigger>
-                            </Label.Triggers>
-                        </Label>
+                        <Label Text="{Binding Organizer.Name}"
+                               Margin="0,10,0,0"
+                               FontSize="16"
+                               FontAttributes="Bold"
+                               TextColor="{StaticResource Primary}" />
+
+                        <HorizontalStackLayout Margin="0,5,0,0" Spacing="10">
+                            <Label Text="{Binding Organizer.ContactPhone, StringFormat='{0}'}"
+                                   FontSize="14"
+                                   TextColor="{StaticResource GrayDark}" />
+                            <Label Text="•"
+                                   FontSize="14"
+                                   TextColor="{StaticResource Gray}" />
+                            <Label Text="{Binding Organizer.Email}"
+                                   FontSize="14"
+                                   TextColor="{StaticResource GrayDark}" />
+                        </HorizontalStackLayout>
                     </VerticalStackLayout>
                 </Frame>
 
-                <Frame Style="{StaticResource Card}">
-                    <VerticalStackLayout>
+                <Frame CornerRadius="10" Padding="15" HasShadow="True">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Информация о мероприятии"
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               TextColor="{StaticResource GrayDark}" />
 
-                        <Button Text="Зарегистрироваться"
-                                Command="{Binding RegisterCommand}"
-                                Style="{StaticResource SuccessButton}">
-                            <Button.Triggers>
-                                <DataTrigger TargetType="Button" 
-                                             Binding="{Binding IsRegistered}" 
-                                             Value="True">
-                                    <Setter Property="IsVisible" Value="False" />
-                                </DataTrigger>
-                                <DataTrigger TargetType="Button" 
-                                             Binding="{Binding Event.HasAvailableSpots}" 
-                                             Value="False">
-                                    <Setter Property="IsVisible" Value="False" />
-                                </DataTrigger>
-                            </Button.Triggers>
-                        </Button>
+                        <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto" 
+                              RowSpacing="10" ColumnSpacing="10">
 
-                        <Button Text="Отменить регистрацию"
-                                Command="{Binding CancelRegistrationCommand}"
-                                Style="{StaticResource ErrorButton}">
-                            <Button.Triggers>
-                                <DataTrigger TargetType="Button" 
-                                             Binding="{Binding IsRegistered}" 
-                                             Value="False">
-                                    <Setter Property="IsVisible" Value="False" />
-                                </DataTrigger>
-                            </Button.Triggers>
-                        </Button>
+                            <Label Text="Стоимость:"
+                                   Grid.Row="0" Grid.Column="0"
+                                   FontSize="16"
+                                   TextColor="{StaticResource GrayDark}" />
+                            <Label Text="{Binding Event.Price, StringFormat='{0:C}'}"
+                                   Grid.Row="0" Grid.Column="1"
+                                   FontSize="16"
+                                   FontAttributes="Bold"
+                                   TextColor="{StaticResource Primary}" 
+                                   HorizontalOptions="End" />
 
+                            <Label Text="Участники:"
+                                   Grid.Row="1" Grid.Column="0"
+                                   FontSize="16"
+                                   TextColor="{StaticResource GrayDark}" />
+                            <Label Text="{Binding Event.CurrentAttendees, StringFormat='{0} / {1}'}"
+                                   Grid.Row="1" Grid.Column="1"
+                                   FontSize="16"
+                                   TextColor="{StaticResource GrayDark}"
+                                   HorizontalOptions="End" />
+
+                            <Label Text="Продолжительность:"
+                                   Grid.Row="2" Grid.Column="0"
+                                   FontSize="16"
+                                   TextColor="{StaticResource GrayDark}" />
+                            <Label Text="{Binding Event.Duration, StringFormat='{0} мин.'}"
+                                   Grid.Row="2" Grid.Column="1"
+                                   FontSize="16"
+                                   TextColor="{StaticResource GrayDark}"
+                                   HorizontalOptions="End" />
+                        </Grid>
                     </VerticalStackLayout>
                 </Frame>
+
+                <Button Text="← Назад к списку"
+                        Command="{Binding GoBackCommand}"
+                        Margin="0,20,0,0"
+                        Padding="20"
+                        CornerRadius="10"
+                        BackgroundColor="{StaticResource Secondary}"
+                        TextColor="{StaticResource Primary}"
+                        FontSize="16" />
 
             </StackLayout>
 
-        </VerticalStackLayout>
+        </StackLayout>
     </ScrollView>
 
 </ContentPage>

@@ -1,5 +1,6 @@
 ﻿using EventFinderClient.Models.DTO;
 using EventFinderClient.Services;
+using EventFinderClient.Views;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -31,10 +32,6 @@ namespace EventFinderClient.ViewModels
             set
             {
                 SetProperty(ref _selectedEvent, value);
-                if (value != null)
-                {
-                    Task.Run(async () => await OnEventSelectedAsync());
-                }
             }
         }
 
@@ -46,6 +43,7 @@ namespace EventFinderClient.ViewModels
 
         public ICommand RefreshEventsCommand { get; }
         public ICommand LoadEventsCommand { get; }
+        public ICommand ViewDetailsCommand { get; }
 
         public EventsViewModel(IApiService apiService)
         {
@@ -54,6 +52,7 @@ namespace EventFinderClient.ViewModels
 
             RefreshEventsCommand = new Command(async () => await RefreshEventsAsync());
             LoadEventsCommand = new Command(async () => await LoadEventsAsync());
+            ViewDetailsCommand = new Command<int>(async (eventId) => await ViewEventDetailsAsync(eventId));
 
             Task.Run(async () => await LoadEventsAsync());
         }
@@ -84,7 +83,11 @@ namespace EventFinderClient.ViewModels
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Ошибка загрузки событий: {ex.Message}");
+                await MainThread.InvokeOnMainThreadAsync(async () =>
+                {
+                    await Shell.Current.DisplayAlert("Ошибка",
+                        "Не удалось загрузить мероприятия", "OK");
+                });
             }
             finally
             {
@@ -92,13 +95,22 @@ namespace EventFinderClient.ViewModels
             }
         }
 
-        private async Task OnEventSelectedAsync()
+        private async Task ViewEventDetailsAsync(int eventId)
         {
-            if (SelectedEvent == null)
-                return;
-
-            await Shell.Current.GoToAsync($"EventDetailsPage?id={SelectedEvent.Id}");
-            SelectedEvent = null;
+            try
+            {
+                await Shell.Current.GoToAsync($"//EventDetailsPage?id={eventId}");
+            }
+            catch (Exception ex)
+            {
+                await MainThread.InvokeOnMainThreadAsync(async () =>
+                {
+                    await Application.Current.MainPage.DisplayAlert(
+                        "Ошибка навигации",
+                        $"Не удалось открыть детали мероприятия.\nОшибка: {ex.Message}",
+                        "OK");
+                });
+            }
         }
     }
 }

@@ -11,17 +11,54 @@ namespace EventFinderClient.ViewModels
 {
     public class EventDetailsViewModel : BaseViewModel
     {
-        private readonly IApiService _apiService;
         private readonly EventService _eventService;
+        private readonly VenueService _venueService;
+        private readonly OrganizerService _organizerService;
 
         private EventDetailsDto _event;
+        private VenueDto _venue;
+        private OrganizerDto _organizer;
         private int _eventId;
-        private bool _isRegistered;
 
         public EventDetailsDto Event
         {
             get => _event;
-            set => SetProperty(ref _event, value);
+            set
+            {
+                if (SetProperty(ref _event, value))
+                {
+                    if (value != null)
+                    {
+                        Task.Run(async () =>
+                        {
+                            await LoadRelatedDataAsync(value.VenueId, value.OrganizerId);
+                        });
+                    }
+                }
+            }
+        }
+
+        public VenueDto Venue
+        {
+            get => _venue;
+            set => SetProperty(ref _venue, value);
+        }
+
+        public OrganizerDto Organizer
+        {
+            get => _organizer;
+            set => SetProperty(ref _organizer, value);
+        }
+
+        public ICommand GoBackCommand { get; }
+
+        public EventDetailsViewModel(IApiService apiService)
+        {
+            _eventService = new EventService(apiService);
+            _venueService = new VenueService(apiService);
+            _organizerService = new OrganizerService(apiService);
+
+            GoBackCommand = new Command(async () => await GoBackAsync());
         }
 
         public int EventId
@@ -29,106 +66,109 @@ namespace EventFinderClient.ViewModels
             get => _eventId;
             set
             {
-                if (_eventId != value)
+                if (_eventId != value && value > 0)
                 {
                     _eventId = value;
                     OnPropertyChanged();
-                    if (value > 0)
-                    {
-                        Task.Run(async () => await LoadEventDetailsAsync());
-                    }
+                    Task.Run(async () => await LoadEventDetailsAsync(value));
                 }
             }
         }
 
-        public bool IsRegistered
-        {
-            get => _isRegistered;
-            set => SetProperty(ref _isRegistered, value);
-        }
-
-        public ICommand RegisterCommand { get; }
-        public ICommand CancelRegistrationCommand { get; }
-
-        public EventDetailsViewModel(IApiService apiService)
-        {
-            _apiService = apiService;
-            _eventService = new EventService(apiService);
-
-            RegisterCommand = new Command(async () => await RegisterForEventAsync());
-            CancelRegistrationCommand = new Command(async () => await CancelRegistrationAsync());
-        }
-
-        private async Task LoadEventDetailsAsync()
+        private async Task LoadEventDetailsAsync(int eventId)
         {
             try
             {
                 IsBusy = true;
 
-                var eventDetails = await _eventService.GetEventDetailsAsync(EventId);
+                var eventDetails = await _eventService.GetEventDetailsAsync(eventId);
+
+                if (eventDetails != null)
+                {
+                    MainThread.BeginInvokeOnMainThread(() =>
+                    {
+                        Event = eventDetails;
+                        Title = eventDetails.Title;
+                    });
+                }
+            }
+            catch
+            {
+                
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        private async Task LoadRelatedDataAsync(int venueId, int organizerId)
+        {
+            try
+            {
+                var tasks = new System.Collections.Generic.List<Task>();
+
+                if (venueId > 0)
+                {
+                    tasks.Add(LoadVenueAsync(venueId));
+                }
+
+                if (organizerId > 0)
+                {
+                    tasks.Add(LoadOrganizerAsync(organizerId));
+                }
+
+                await Task.WhenAll(tasks);
+            }
+            catch
+            {
+               
+            }
+        }
+
+        private async Task LoadVenueAsync(int venueId)
+        {
+            try
+            {
+                var venue = await _venueService.GetVenueByIdAsync(venueId);
 
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
-                    Event = eventDetails;
-                    IsRegistered = new Random().Next(0, 2) == 1;
+                    Venue = venue;
                 });
             }
-            catch (Exception ex)
+            catch
             {
-                Console.WriteLine($"Ошибка загрузки деталей события: {ex.Message}");
-            }
-            finally
-            {
-                IsBusy = false;
+               
             }
         }
 
-        private async Task RegisterForEventAsync()
+        private async Task LoadOrganizerAsync(int organizerId)
         {
             try
             {
-                IsBusy = true;
+                var organizer = await _organizerService.GetOrganizerByIdAsync(organizerId);
 
-                var registerDto = new RegisterForEventDto
+                MainThread.BeginInvokeOnMainThread(() =>
                 {
-                    UserName = "Текущий пользователь",
-                    Email = "user@example.com"
-                };
-
-                var success = await _eventService.RegisterForEventAsync(EventId, registerDto);
-
-                if (success)
-                {
-                    IsRegistered = true;
-                    await LoadEventDetailsAsync();
-                }
+                    Organizer = organizer;
+                });
             }
-            catch (Exception ex)
+            catch
             {
-                Console.WriteLine($"Ошибка регистрации на событие: {ex.Message}");
-            }
-            finally
-            {
-                IsBusy = false;
+                
             }
         }
 
-        private async Task CancelRegistrationAsync()
+        private async Task GoBackAsync()
         {
             try
             {
-                IsBusy = true;
-
-                IsRegistered = false;
-                await LoadEventDetailsAsync();
+                await Shell.Current.GoToAsync("//EventsPage");
             }
-            catch (Exception ex)
+            catch
             {
-                Console.WriteLine($"Ошибка отмены регистрации: {ex.Message}");
-            }
-            finally
-            {
-                IsBusy = false;
+                
             }
         }
     }

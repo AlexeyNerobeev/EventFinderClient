@@ -2,26 +2,42 @@ using EventFinderClient.ViewModels;
 
 namespace EventFinderClient.Views;
 
-[QueryProperty("Id", "id")]
+[QueryProperty(nameof(EventId), "id")]
 public partial class EventDetailsPage : ContentPage
 {
     private readonly EventDetailsViewModel _viewModel;
 
-    public int Id
+    public EventDetailsPage(EventDetailsViewModel viewModel)
     {
+        try
+        {
+            InitializeComponent();
+            _viewModel = viewModel;
+            BindingContext = viewModel;
+        }
+        catch (Exception ex)
+        {
+            throw new ArgumentException(ex.Message);
+        }
+    }
+
+    private int _eventId;
+    public int EventId
+    {
+        get => _eventId;
         set
         {
-            if (_viewModel != null)
+            _eventId = value;
+
+            if (_viewModel != null && value > 0)
             {
                 _viewModel.EventId = value;
             }
         }
     }
 
-    public EventDetailsPage(EventDetailsViewModel viewModel)
+    protected override void OnAppearing()
     {
-        InitializeComponent();
-        _viewModel = viewModel;
-        BindingContext = viewModel;
+        base.OnAppearing();
     }
 }

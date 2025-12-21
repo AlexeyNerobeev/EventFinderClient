@@ -5,37 +5,34 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:local="clr-namespace:EventFinderClient"
     xmlns:views="clr-namespace:EventFinderClient.Views"
-    Shell.FlyoutBehavior="Flyout"
+    Shell.FlyoutBehavior="Disabled"
     Title="EventFinderClient">
 
-    <FlyoutItem Title="Login">
+    <TabBar Route="MainTab">
         <ShellContent
-              ContentTemplate="{DataTemplate views:LoginPage}"
-              Route="LoginPage" />
-    </FlyoutItem>
+            Title="Мероприятия"
+            ContentTemplate="{DataTemplate views:EventsPage}"
+            Route="EventsPage"/>
 
-    <FlyoutItem Title="Register">
         <ShellContent
-           ContentTemplate="{DataTemplate views:RegisterPage}"
-           Route="RegisterPage" />
-    </FlyoutItem>
+            Title="Профиль"
+            ContentTemplate="{DataTemplate views:ProfilePage}"
+            Route="ProfilePage"/>
+    </TabBar>
 
-    <FlyoutItem Title="Events">
-        <ShellContent
-           ContentTemplate="{DataTemplate views:EventsPage}"
-           Route="EventsPage" />
-    </FlyoutItem>
+    <ShellContent
+    Title="Регистрация"
+    ContentTemplate="{DataTemplate views:RegisterPage}"
+    Route="RegisterPage"/>
     
-    <FlyoutItem Title="EventDetails">
-        <ShellContent
-           ContentTemplate="{DataTemplate views:EventDetailsPage}"
-           Route="EventDetailsPage" />
-    </FlyoutItem>
-
-    <FlyoutItem Title="Profile">
-        <ShellContent
-           ContentTemplate="{DataTemplate views:ProfilePage}"
-           Route="ProfilePage" />
-    </FlyoutItem>
+    <ShellContent
+    Title="Авторизация"
+    ContentTemplate="{DataTemplate views:LoginPage}"
+    Route="LoginPage"/>
+    
+    <ShellContent
+    Title="Детали"
+    ContentTemplate="{DataTemplate views:EventDetailsPage}"
+    Route="EventDetailsPage"/>
 
 </Shell>

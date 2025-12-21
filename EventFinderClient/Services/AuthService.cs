@@ -39,5 +39,17 @@ namespace EventFinderClient.Services
                 throw new Exception($"Ошибка регистрации: {ex.Message}");
             }
         }
+
+        public async Task<UserProfileDto> GetProfileAsync()
+        {
+            try
+            {
+                return await _apiService.GetAsync<UserProfileDto>("users/profile");
+            }
+            catch
+            {
+                throw;
+            }
+        }
     }
 }

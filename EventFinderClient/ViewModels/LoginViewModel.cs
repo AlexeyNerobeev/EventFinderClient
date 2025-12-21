@@ -69,7 +69,9 @@ namespace EventFinderClient.ViewModels
                 if (authResponse != null && !string.IsNullOrEmpty(authResponse.Token))
                 {
                     await SecureStorage.SetAsync("auth_token", authResponse.Token);
+
                     _apiService.SetAuthorizationHeader(authResponse.Token);
+
                     await Shell.Current.GoToAsync("//EventsPage");
                 }
                 else

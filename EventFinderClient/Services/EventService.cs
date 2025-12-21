@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace EventFinderClient.Services
@@ -32,11 +33,12 @@ namespace EventFinderClient.Services
         {
             try
             {
-                return await _apiService.GetAsync<EventDetailsDto>($"events/{eventId}");
+                var eventDetails = await _apiService.GetAsync<EventDetailsDto>($"events/{eventId}");
+                return eventDetails;
             }
             catch (Exception ex)
             {
-                throw new Exception($"Ошибка получения деталей события: {ex.Message}");
+                return null;
             }
         }
 

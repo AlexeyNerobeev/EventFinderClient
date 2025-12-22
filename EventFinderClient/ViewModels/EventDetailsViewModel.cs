@@ -14,11 +14,16 @@ namespace EventFinderClient.ViewModels
         private readonly EventService _eventService;
         private readonly VenueService _venueService;
         private readonly OrganizerService _organizerService;
+        private readonly AuthService _authService;
+        private readonly EventAttendeeService _attendeeService;
 
         private EventDetailsDto _event;
         private VenueDto _venue;
         private OrganizerDto _organizer;
         private int _eventId;
+        private bool _isRegistered;
+        private string _currentUserEmail = string.Empty;
+        private string _currentUserName = string.Empty;
 
         public EventDetailsDto Event
         {
@@ -32,6 +37,7 @@ namespace EventFinderClient.ViewModels
                         Task.Run(async () =>
                         {
                             await LoadRelatedDataAsync(value.VenueId, value.OrganizerId);
+                            await CheckIfUserIsRegisteredAsync();
                         });
                     }
                 }
@@ -50,6 +56,14 @@ namespace EventFinderClient.ViewModels
             set => SetProperty(ref _organizer, value);
         }
 
+        public bool IsRegistered
+        {
+            get => _isRegistered;
+            set => SetProperty(ref _isRegistered, value);
+        }
+
+        public ICommand RegisterCommand { get; }
+        public ICommand UnregisterCommand { get; }
         public ICommand GoBackCommand { get; }
 
         public EventDetailsViewModel(IApiService apiService)
@@ -57,8 +71,14 @@ namespace EventFinderClient.ViewModels
             _eventService = new EventService(apiService);
             _venueService = new VenueService(apiService);
             _organizerService = new OrganizerService(apiService);
+            _authService = new AuthService(apiService);
+            _attendeeService = new EventAttendeeService(apiService);
 
+            RegisterCommand = new Command(async () => await RegisterForEventAsync());
+            UnregisterCommand = new Command(async () => await UnregisterFromEventAsync());
             GoBackCommand = new Command(async () => await GoBackAsync());
+
+            Task.Run(async () => await LoadCurrentUserInfoAsync());
         }
 
         public int EventId
@@ -72,6 +92,23 @@ namespace EventFinderClient.ViewModels
                     OnPropertyChanged();
                     Task.Run(async () => await LoadEventDetailsAsync(value));
                 }
+            }
+        }
+
+        private async Task LoadCurrentUserInfoAsync()
+        {
+            try
+            {
+                var profile = await _authService.GetProfileAsync();
+                if (profile != null)
+                {
+                    _currentUserEmail = profile.Email;
+                    _currentUserName = profile.Username;
+                }
+            }
+            catch
+            {
+          
             }
         }
 
@@ -94,7 +131,7 @@ namespace EventFinderClient.ViewModels
             }
             catch
             {
-                
+               
             }
             finally
             {
@@ -122,7 +159,7 @@ namespace EventFinderClient.ViewModels
             }
             catch
             {
-               
+                
             }
         }
 
@@ -139,7 +176,7 @@ namespace EventFinderClient.ViewModels
             }
             catch
             {
-               
+                
             }
         }
 
@@ -160,6 +197,145 @@ namespace EventFinderClient.ViewModels
             }
         }
 
+        private async Task CheckIfUserIsRegisteredAsync()
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(_currentUserEmail) || Event == null)
+                {
+                    IsRegistered = false;
+                    return;
+                }
+
+                var isRegistered = await _attendeeService.IsUserRegisteredForEventAsync(Event.Id, _currentUserEmail);
+                IsRegistered = isRegistered;
+            }
+            catch
+            {
+                IsRegistered = false;
+            }
+        }
+
+        private async Task RegisterForEventAsync()
+        {
+            try
+            {
+                if (Event == null)
+                {
+                    await ShowMessage("Ошибка", "Мероприятие не найдено");
+                    return;
+                }
+
+                if (string.IsNullOrEmpty(_currentUserEmail))
+                {
+                    await ShowMessage("Ошибка", "Необходимо войти в систему");
+                    return;
+                }
+
+                if (IsRegistered)
+                {
+                    await ShowMessage("Информация", "Вы уже зарегистрированы на это мероприятие");
+                    return;
+                }
+
+                if (Event.CurrentAttendees >= Event.MaxAttendees)
+                {
+                    await ShowMessage("Ошибка", "На мероприятии нет свободных мест");
+                    return;
+                }
+
+                IsBusy = true;
+
+                var registerDto = new RegisterForEventDto
+                {
+                    UserName = _currentUserName,
+                    Email = _currentUserEmail
+                };
+
+                var success = await _attendeeService.RegisterForEventAsync(Event.Id, registerDto);
+
+                if (success)
+                {
+                    IsRegistered = true;
+
+                    if (Event != null)
+                    {
+                        Event.CurrentAttendees++;
+                        OnPropertyChanged(nameof(Event));
+                    }
+
+                    await ShowMessage("Успех", "Вы успешно зарегистрировались на мероприятие");
+                }
+                else
+                {
+                    await ShowMessage("Ошибка", $"Не удалось зарегистрироваться на мероприятие");
+                }
+            }
+            catch
+            {
+                await ShowMessage("Ошибка", "Произошла ошибка при регистрации");
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        private async Task UnregisterFromEventAsync()
+        {
+            try
+            {
+                if (Event == null || string.IsNullOrEmpty(_currentUserEmail))
+                {
+                    await ShowMessage("Ошибка", "Не удалось определить пользователя");
+                    return;
+                }
+
+                if (!IsRegistered)
+                {
+                    await ShowMessage("Информация", "Вы не зарегистрированы на это мероприятие");
+                    return;
+                }
+
+                IsBusy = true;
+
+                var success = await _attendeeService.CancelRegistrationAsync(Event.Id, _currentUserEmail);
+
+                if (success)
+                {
+                    IsRegistered = false;
+
+                    if (Event != null && Event.CurrentAttendees > 0)
+                    {
+                        Event.CurrentAttendees--;
+                        OnPropertyChanged(nameof(Event));
+                    }
+
+                    await ShowMessage("Успех", "Регистрация на мероприятие отменена");
+                }
+                else
+                {
+                    await ShowMessage("Ошибка", "Не удалось отменить регистрацию");
+                }
+            }
+            catch
+            {
+                await ShowMessage("Ошибка", "Произошла ошибка при отмене регистрации");
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        private async Task ShowMessage(string title, string message)
+        {
+            await MainThread.InvokeOnMainThreadAsync(async () =>
+            {
+                await Application.Current.MainPage.DisplayAlert(title, message, "OK");
+            });
+        }
+
         private async Task GoBackAsync()
         {
             try
@@ -168,7 +344,7 @@ namespace EventFinderClient.ViewModels
             }
             catch
             {
-                
+              
             }
         }
     }

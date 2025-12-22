@@ -23,9 +23,9 @@ namespace EventFinderClient.Services
             {
                 return await _apiService.GetAsync<List<EventDto>>("events");
             }
-            catch (Exception ex)
+            catch
             {
-                throw new Exception($"Ошибка получения событий: {ex.Message}");
+                return new List<EventDto>();
             }
         }
 
@@ -33,10 +33,9 @@ namespace EventFinderClient.Services
         {
             try
             {
-                var eventDetails = await _apiService.GetAsync<EventDetailsDto>($"events/{eventId}");
-                return eventDetails;
+                return await _apiService.GetAsync<EventDetailsDto>($"events/{eventId}");
             }
-            catch (Exception ex)
+            catch
             {
                 return null;
             }
@@ -49,21 +48,34 @@ namespace EventFinderClient.Services
                 var result = await _apiService.PostAsync<object>($"events/{eventId}/register", registerDto);
                 return true;
             }
-            catch (Exception ex)
+            catch
             {
-                throw new Exception($"Ошибка регистрации на событие: {ex.Message}");
+                return false;
             }
         }
 
-        public async Task<bool> CancelRegistrationAsync(int eventId)
+        public async Task<bool> CancelRegistrationAsync(int eventId, string email)
         {
             try
             {
-                return await _apiService.DeleteAsync($"events/{eventId}/register");
+                return await _apiService.DeleteAsync($"events/{eventId}/register?email={email}");
             }
-            catch (Exception ex)
+            catch
             {
-                throw new Exception($"Ошибка отмены регистрации: {ex.Message}");
+                return false;
+            }
+        }
+
+        public async Task<bool> IsUserRegisteredForEventAsync(int eventId, string email)
+        {
+            try
+            {
+                var attendees = await _apiService.GetAsync<List<EventAttendeeDto>>($"eventattendees/events/{eventId}");
+                return attendees?.Any(a => a.Email == email) ?? false;
+            }
+            catch
+            {
+                return false;
             }
         }
     }

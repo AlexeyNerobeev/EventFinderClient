@@ -74,11 +74,10 @@
                                FontSize="14"
                                TextColor="{StaticResource GrayDark}" />
 
-                        <HorizontalStackLayout Margin="0,5,0,0" Spacing="10">
-                            <Label Text="{Binding Venue.Capacity, StringFormat='Вместимость: {0}'}"
-                                   FontSize="14"
-                                   TextColor="{StaticResource Gray}" />
-                        </HorizontalStackLayout>
+                        <Label Text="{Binding Venue.Capacity, StringFormat='Вместимость: {0} человек'}"
+                               Margin="0,5,0,0"
+                               FontSize="14"
+                               TextColor="{StaticResource Gray}" />
                     </VerticalStackLayout>
                 </Frame>
 
@@ -154,9 +153,35 @@
                     </VerticalStackLayout>
                 </Frame>
 
+                <Frame CornerRadius="10" Padding="15" HasShadow="True">
+                    <VerticalStackLayout Spacing="10">
+
+                        <Button Text="Зарегистрироваться на мероприятие"
+                                Command="{Binding RegisterCommand}"
+                                Style="{StaticResource SuccessButton}"
+                                IsVisible="{Binding IsRegistered, Converter={StaticResource InverseBoolConverter}}">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button"
+                                             Binding="{Binding Event.HasAvailableSpots}"
+                                             Value="False">
+                                    <Setter Property="IsEnabled" Value="False" />
+                                    <Setter Property="Text" Value="Мест нет" />
+                                    <Setter Property="BackgroundColor" Value="{StaticResource Gray}" />
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+
+                        <Button Text="Отменить регистрацию"
+                                Command="{Binding UnregisterCommand}"
+                                Style="{StaticResource ErrorButton}"
+                                IsVisible="{Binding IsRegistered}" />
+
+                    </VerticalStackLayout>
+                </Frame>
+
                 <Button Text="← Назад к списку"
                         Command="{Binding GoBackCommand}"
-                        Margin="0,20,0,0"
+                        Margin="0,10,0,0"
                         Padding="20"
                         CornerRadius="10"
                         BackgroundColor="{StaticResource Secondary}"
@@ -167,5 +192,6 @@
 
         </StackLayout>
     </ScrollView>
+
 
 </ContentPage>

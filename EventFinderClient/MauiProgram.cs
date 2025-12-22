@@ -22,6 +22,9 @@ namespace EventFinderClient
             builder.Services.AddSingleton<IApiService, ApiService>();
             builder.Services.AddSingleton<AuthService>();
             builder.Services.AddSingleton<EventService>();
+            builder.Services.AddSingleton<VenueService>();
+            builder.Services.AddSingleton<OrganizerService>();
+            builder.Services.AddSingleton<EventAttendeeService>();
 
             // ViewModels
             builder.Services.AddTransient<LoginViewModel>();

@@ -1,52 +1,70 @@
-﻿using EventFinderClient.Models.DTO;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿    using EventFinderClient.Models.DTO;
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Text;
+    using System.Threading.Tasks;
 
-namespace EventFinderClient.Services
-{
-    public class EventAttendeeService
+    namespace EventFinderClient.Services
     {
-        private readonly IApiService _apiService;
-
-        public EventAttendeeService(IApiService apiService)
+        public class EventAttendeeService
         {
-            _apiService = apiService;
-        }
+            private readonly IApiService _apiService;
 
-        public async Task<bool> RegisterForEventAsync(int eventId, RegisterForEventDto registerDto)
-        {
-            try
+            public EventAttendeeService(IApiService apiService)
             {
-                var result = await _apiService.PostAsync<object>($"events/{eventId}/register", registerDto);
+                _apiService = apiService;
+            }
+
+            public async Task<bool> RegisterForEventAsync(int eventId, RegisterForEventDto registerDto)
+            {
+                try
+                {
+                var result = await _apiService.PostAsync<object>($"eventattendees/events/{eventId}/register", registerDto);
                 return true;
+                }
+                catch
+                {
+                    return false;
+                }
             }
-            catch
-            {
-                return false;
-            }
-        }
 
-        public async Task<bool> CancelRegistrationAsync(int eventId, string email)
-        {
-            try
+            public async Task<bool> CancelRegistrationAsync(int registrationId)
             {
-                return await _apiService.DeleteAsync($"events/{eventId}/register?email={Uri.EscapeDataString(email)}");
+                try
+                {
+                    return await _apiService.DeleteAsync($"eventattendees/{registrationId}");
+                }
+                catch
+                {
+                    return false;
+                }
             }
-            catch
+
+            public async Task<int?> GetRegistrationIdAsync(int eventId, string email)
             {
-                return false;
+                try
+                {
+                    var attendees = await GetAttendeesForEventAsync(eventId);
+                    var registration = attendees?.FirstOrDefault(a => a.Email == email);
+                    return registration?.Id;
+                }
+                catch
+                {
+                    return null;
+                }
             }
-        }
 
         public async Task<bool> IsUserRegisteredForEventAsync(int eventId, string email)
         {
             try
             {
                 var attendees = await GetAttendeesForEventAsync(eventId);
-                return attendees?.Any(a => a.Email == email) ?? false;
+
+                var isRegistered = attendees?.Any(a =>
+                    string.Equals(a.Email, email, StringComparison.OrdinalIgnoreCase)) ?? false;
+
+                return isRegistered;
             }
             catch
             {
@@ -54,16 +72,16 @@ namespace EventFinderClient.Services
             }
         }
 
-        public async Task<List<EventAttendeeDto>> GetAttendeesForEventAsync(int eventId)
-        {
-            try
+            public async Task<List<EventAttendeeDto>> GetAttendeesForEventAsync(int eventId)
             {
-                return await _apiService.GetAsync<List<EventAttendeeDto>>($"eventattendees/events/{eventId}");
-            }
-            catch
-            {
-                return new List<EventAttendeeDto>();
+                try
+                {
+                    return await _apiService.GetAsync<List<EventAttendeeDto>>($"eventattendees/events/{eventId}");
+                }
+                catch
+                {
+                    return new List<EventAttendeeDto>();
+                }
             }
         }
     }
-}

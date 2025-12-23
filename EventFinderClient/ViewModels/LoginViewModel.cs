@@ -59,8 +59,6 @@ namespace EventFinderClient.ViewModels
                 IsBusy = true;
                 ErrorMessage = string.Empty;
 
-                Debug.WriteLine($"[LoginViewModel] Начало входа для {Email}");
-
                 var loginRequest = new LoginRequestDto
                 {
                     Email = Email,
@@ -71,27 +69,15 @@ namespace EventFinderClient.ViewModels
 
                 if (authResponse != null && !string.IsNullOrEmpty(authResponse.Token))
                 {
-                    await ClearAllUserData();
+                    await ClearOldUserData();
 
-                    await SecureStorage.Default.SetAsync("auth_token", authResponse.Token);
+                    await SecureStorage.SetAsync("auth_token", authResponse.Token);
 
-                    await SecureStorage.Default.SetAsync("user_email", authResponse.Email);
-                    await SecureStorage.Default.SetAsync("user_name", authResponse.Username);
-                    await SecureStorage.Default.SetAsync("user_id", authResponse.UserId.ToString());
-                    await SecureStorage.Default.SetAsync("user_role", authResponse.Role);
-
-                    Preferences.Default.Set("AuthToken", authResponse.Token);
-                    Preferences.Default.Set("UserId", authResponse.UserId.ToString());
-                    Preferences.Default.Set("Username", authResponse.Username);
-                    Preferences.Default.Set("Email", authResponse.Email);
-                    Preferences.Default.Set("Role", authResponse.Role);
-
-                    Debug.WriteLine($"[LoginViewModel] Данные нового пользователя сохранены: {authResponse.Email}");
+                    await SecureStorage.SetAsync("user_email", authResponse.Email);
+                    await SecureStorage.SetAsync("user_name", authResponse.Username);
+                    await SecureStorage.SetAsync("user_id", authResponse.UserId.ToString());
 
                     _apiService.SetAuthorizationHeader(authResponse.Token);
-
-                    Email = string.Empty;
-                    Password = string.Empty;
 
                     await Shell.Current.GoToAsync("//EventsPage");
                 }
@@ -110,26 +96,25 @@ namespace EventFinderClient.ViewModels
             }
         }
 
-        private async Task ClearAllUserData()
+        private async Task ClearOldUserData()
         {
             try
             {
-                SecureStorage.Default.Remove("auth_token");
-                SecureStorage.Default.Remove("user_email");
-                SecureStorage.Default.Remove("user_name");
-                SecureStorage.Default.Remove("user_id");
-                SecureStorage.Default.Remove("user_role");
+                SecureStorage.Remove("auth_token");
+                SecureStorage.Remove("user_email");
+                SecureStorage.Remove("user_name");
+                SecureStorage.Remove("user_id");
 
-                Preferences.Default.Remove("AuthToken");
-                Preferences.Default.Remove("UserId");
-                Preferences.Default.Remove("Username");
-                Preferences.Default.Remove("Email");
-                Preferences.Default.Remove("Role");
+                // Очищаем Preferences
+                Preferences.Remove("AuthToken");
+                Preferences.Remove("UserId");
+                Preferences.Remove("Username");
+                Preferences.Remove("Email");
+                Preferences.Remove("Role");
 
                 _apiService.ClearAuthorizationHeader();
-
             }
-            catch 
+            catch
             {
                 
             }

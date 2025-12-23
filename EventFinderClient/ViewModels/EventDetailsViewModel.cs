@@ -100,47 +100,29 @@ namespace EventFinderClient.ViewModels
         {
             try
             {
-                _currentUserEmail = await SecureStorage.Default.GetAsync("user_email");
+                var storedEmail = await SecureStorage.GetAsync("user_email");
+                var storedName = await SecureStorage.GetAsync("user_name");
 
-                if (string.IsNullOrEmpty(_currentUserEmail))
+                if (!string.IsNullOrEmpty(storedEmail))
                 {
-                    _currentUserEmail = Preferences.Default.Get("Email", string.Empty);
-                }
-
-                if (string.IsNullOrEmpty(_currentUserEmail))
-                {
-                    try
-                    {
-                        var profile = await _authService.GetProfileAsync();
-                        if (profile != null)
-                        {
-                            _currentUserEmail = profile.Email;
-                            _currentUserName = profile.Username;
-
-                            await SecureStorage.Default.SetAsync("user_email", profile.Email);
-                            await SecureStorage.Default.SetAsync("user_name", profile.Username);
-
-                            Preferences.Default.Set("Email", profile.Email);
-                            Preferences.Default.Set("Username", profile.Username);
-                        }
-                    }
-                    catch 
-                    {
-                        
-                    }
+                    _currentUserEmail = storedEmail;
+                    _currentUserName = storedName ?? string.Empty;
                 }
                 else
                 {
-                    _currentUserName = await SecureStorage.Default.GetAsync("user_name");
-                    if (string.IsNullOrEmpty(_currentUserName))
+                    var profile = await _authService.GetProfileAsync();
+                    if (profile != null)
                     {
-                        _currentUserName = Preferences.Default.Get("Username", string.Empty);
+                        _currentUserEmail = profile.Email;
+                        _currentUserName = profile.Username;
                     }
                 }
+
+                await ShowMessage("hsd", $"{_currentUserEmail} {_currentUserName}");
             }
-            catch 
+            catch
             {
-               
+                
             }
         }
 
@@ -163,7 +145,6 @@ namespace EventFinderClient.ViewModels
             }
             catch
             {
-               
             }
             finally
             {
@@ -175,7 +156,7 @@ namespace EventFinderClient.ViewModels
         {
             try
             {
-                var tasks = new System.Collections.Generic.List<Task>();
+                var tasks = new List<Task>();
 
                 if (venueId > 0)
                 {
@@ -191,7 +172,6 @@ namespace EventFinderClient.ViewModels
             }
             catch
             {
-                
             }
         }
 
@@ -208,7 +188,6 @@ namespace EventFinderClient.ViewModels
             }
             catch
             {
-                
             }
         }
 
@@ -225,7 +204,6 @@ namespace EventFinderClient.ViewModels
             }
             catch
             {
-                
             }
         }
 
@@ -233,50 +211,16 @@ namespace EventFinderClient.ViewModels
         {
             try
             {
-                if (Event == null)
+                if (string.IsNullOrEmpty(_currentUserEmail) || Event == null)
                 {
                     IsRegistered = false;
                     return;
                 }
 
-                var userEmail = await SecureStorage.Default.GetAsync("user_email");
-
-                if (string.IsNullOrEmpty(userEmail))
-                {
-                    userEmail = Preferences.Default.Get("Email", string.Empty);
-                }
-
-                if (string.IsNullOrEmpty(userEmail))
-                {
-                    try
-                    {
-                        var profile = await _authService.GetProfileAsync();
-                        if (profile != null)
-                        {
-                            userEmail = profile.Email;
-                            await SecureStorage.Default.SetAsync("user_email", profile.Email);
-                            Preferences.Default.Set("Email", profile.Email);
-                        }
-                    }
-                    catch
-                    {
-                        
-                    }
-                }
-
-                if (string.IsNullOrEmpty(userEmail))
-                {
-                    IsRegistered = false;
-                    return;
-                }
-                        
-                _currentUserEmail = userEmail;
-
-                var attendees = await _attendeeService.IsUserRegisteredForEventAsync(Event.Id, _currentUserEmail);
-
-                IsRegistered = attendees;
+                var isRegistered = await _attendeeService.IsUserRegisteredForEventAsync(Event.Id, _currentUserEmail);
+                IsRegistered = isRegistered;
             }
-            catch   
+            catch
             {
                 IsRegistered = false;
             }
@@ -330,13 +274,11 @@ namespace EventFinderClient.ViewModels
                         OnPropertyChanged(nameof(Event));
                     }
 
-                    await RefreshEventAttendeesAsync();
-
                     await ShowMessage("Успех", "Вы успешно зарегистрировались на мероприятие");
                 }
                 else
                 {
-                    await ShowMessage("Ошибка", $"Не удалось зарегистрироваться на мероприятие");
+                    await ShowMessage("Ошибка", "Не удалось зарегистрироваться на мероприятие");
                 }
             }
             catch
@@ -358,10 +300,8 @@ namespace EventFinderClient.ViewModels
                     await ShowMessage("Ошибка", "Не удалось определить пользователя");
                     return;
                 }
-                    
-                var registrationId = await _attendeeService.GetRegistrationIdAsync(Event.Id, _currentUserEmail);
 
-                if (!registrationId.HasValue)
+                if (!IsRegistered)
                 {
                     await ShowMessage("Информация", "Вы не зарегистрированы на это мероприятие");
                     return;
@@ -369,7 +309,7 @@ namespace EventFinderClient.ViewModels
 
                 IsBusy = true;
 
-                var success = await _attendeeService.CancelRegistrationAsync(registrationId.Value);
+                var success = await _attendeeService.CancelRegistrationAsync(Event.Id, _currentUserEmail);
 
                 if (success)
                 {
@@ -381,8 +321,6 @@ namespace EventFinderClient.ViewModels
                         OnPropertyChanged(nameof(Event));
                     }
 
-                    await RefreshEventAttendeesAsync();
-
                     await ShowMessage("Успех", "Регистрация на мероприятие отменена");
                 }
                 else
@@ -390,50 +328,13 @@ namespace EventFinderClient.ViewModels
                     await ShowMessage("Ошибка", "Не удалось отменить регистрацию");
                 }
             }
-            catch (Exception ex)
+            catch
             {
                 await ShowMessage("Ошибка", "Произошла ошибка при отмене регистрации");
             }
             finally
             {
                 IsBusy = false;
-            }
-        }
-
-        private async Task RefreshEventAttendeesAsync()
-        {
-            try
-            {
-                if (Event == null) return;
-
-                var attendees = await _attendeeService.GetAttendeesForEventAsync(Event.Id);
-
-                if (Event.Attendees == null)
-                {
-                    Event.Attendees = new List<EventAttendeeDto>();
-                }
-                else
-                {
-                    Event.Attendees.Clear();
-                }
-
-                if (attendees != null)
-                {
-                    foreach (var attendee in attendees)
-                    {
-                        Event.Attendees.Add(attendee);
-                    }
-                }
-
-                Event.CurrentAttendees = Event.Attendees.Count;
-
-                await CheckIfUserIsRegisteredAsync();
-
-                OnPropertyChanged(nameof(Event));
-            }
-            catch
-            {
-               
             }
         }
 
@@ -453,7 +354,7 @@ namespace EventFinderClient.ViewModels
             }
             catch
             {
-              
+                
             }
         }
     }

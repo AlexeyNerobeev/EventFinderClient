@@ -12,6 +12,7 @@ namespace EventFinderClient.ViewModels
     public class ProfileViewModel : BaseViewModel
     {
         private readonly AuthService _authService;
+        private readonly IApiService _apiService;
 
         private string _username = string.Empty;
         private string _email = string.Empty;
@@ -47,6 +48,7 @@ namespace EventFinderClient.ViewModels
 
         public ProfileViewModel(IApiService apiService)
         {
+            _apiService = apiService;
             _authService = new AuthService(apiService);
 
             LoadProfileCommand = new Command(async () => await LoadProfileAsync());
@@ -106,18 +108,23 @@ namespace EventFinderClient.ViewModels
             try
             {
                 SecureStorage.Remove("auth_token");
+                SecureStorage.Remove("user_email");
+                SecureStorage.Remove("user_name");
+                SecureStorage.Remove("user_id");
 
-                if (Application.Current.Handler?.MauiContext?.Services != null)
-                {
-                    var apiService = Application.Current.Handler.MauiContext.Services.GetService<IApiService>();
-                    apiService?.ClearAuthorizationHeader();
-                }
+                Preferences.Remove("AuthToken");
+                Preferences.Remove("UserId");
+                Preferences.Remove("Username");
+                Preferences.Remove("Email");
+                Preferences.Remove("Role");
+
+                _apiService.ClearAuthorizationHeader();
 
                 await Shell.Current.GoToAsync("//LoginPage");
             }
-            catch
+            catch (Exception ex)
             {
-                
+                await Application.Current.MainPage.DisplayAlert("Ошибка", $"Не удалось выйти: {ex.Message}", "OK");
             }
         }
 

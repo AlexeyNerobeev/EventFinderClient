@@ -101,8 +101,14 @@ namespace EventFinderClient.ViewModels
 
                 if (authResponse != null && !string.IsNullOrEmpty(authResponse.Token))
                 {
+                    await ClearOldUserData();
+
                     await SecureStorage.SetAsync("auth_token", authResponse.Token);
                     _apiService.SetAuthorizationHeader(authResponse.Token);
+
+                    await SecureStorage.SetAsync("user_email", authResponse.Email);
+                    await SecureStorage.SetAsync("user_name", authResponse.Username);
+                    await SecureStorage.SetAsync("user_id", authResponse.UserId.ToString());
 
                     await Shell.Current.GoToAsync("//EventsPage");
                 }
@@ -118,6 +124,29 @@ namespace EventFinderClient.ViewModels
             finally
             {
                 IsBusy = false;
+            }
+        }
+
+        private async Task ClearOldUserData()
+        {
+            try
+            {
+                SecureStorage.Remove("auth_token");
+                SecureStorage.Remove("user_email");
+                SecureStorage.Remove("user_name");
+                SecureStorage.Remove("user_id");
+
+                Preferences.Remove("AuthToken");
+                Preferences.Remove("UserId");
+                Preferences.Remove("Username");
+                Preferences.Remove("Email");
+                Preferences.Remove("Role");
+
+                _apiService.ClearAuthorizationHeader();
+            }
+            catch
+            {
+                
             }
         }
 

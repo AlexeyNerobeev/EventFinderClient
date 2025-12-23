@@ -48,7 +48,7 @@ namespace EventFinderClient.Services
             }
             catch
             {
-                throw;
+                return null;
             }
         }
     }
